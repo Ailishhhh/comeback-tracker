@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Comeback — Mission Tracker</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
+    --txt:#e6edf3; --muted:#8b949e; --accent:#facc15; --green:#3fb950;
+    --blue:#58a6ff; --purple:#bc8cff; --pink:#f778ba; --red:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#1a2233 0%,var(--bg) 55%);
+    color:var(--txt);line-height:1.5;padding-bottom:80px}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 18px}
+  header.hero{text-align:center;padding:34px 16px 18px}
+  header.hero h1{font-size:30px;margin:0 0 6px;letter-spacing:.5px}
+  header.hero .sub{color:var(--accent);font-weight:600;letter-spacing:2px;font-size:13px;text-transform:uppercase}
+  header.hero p{color:var(--muted);max-width:640px;margin:12px auto 0;font-size:15px}
+  .quote{margin:18px auto 0;max-width:660px;font-style:italic;color:#cdd6e0;
+    border-left:3px solid var(--accent);padding:8px 14px;text-align:left;background:#ffffff08;border-radius:6px}
+  .grid{display:grid;gap:14px}
+  @media(min-width:760px){.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+  .card h2{margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h2 .tag{font-size:11px;background:var(--panel2);color:var(--muted);padding:2px 8px;border-radius:20px;font-weight:600}
+  .card .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .mini{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .mini h3{margin:0 0 8px;font-size:15px}
+  label.task{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-radius:8px;cursor:pointer;transition:.15s}
+  label.task:hover{background:#ffffff08}
+  label.task input{margin-top:3px;width:17px;height:17px;accent-color:var(--green);cursor:pointer;flex:0 0 auto}
+  label.task span{font-size:14.5px}
+  label.task input:checked + span{color:var(--muted);text-decoration:line-through}
+  .small{font-size:12.5px;color:var(--muted)}
+  .bar{height:9px;background:#0c1018;border-radius:20px;overflow:hidden;border:1px solid var(--line);margin:8px 0 2px}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .4s}
+  .pct{font-size:12px;color:var(--muted);float:right}
+  .phase{border-left:4px solid var(--blue);padding-left:14px;margin:0 0 6px}
+  .phase .when{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .phase h3{margin:2px 0 2px;font-size:17px}
+  .phase .goal{color:var(--muted);font-size:13.5px;margin:0 0 8px}
+  .pill{display:inline-block;font-size:11px;padding:3px 9px;border-radius:20px;margin:2px 4px 2px 0}
+  .p-core{background:#1f6feb22;color:var(--blue);border:1px solid #1f6feb44}
+  .p-extra{background:#bc8cff22;color:var(--purple);border:1px solid #bc8cff44}
+  .p-rev{background:#3fb95022;color:var(--green);border:1px solid #3fb95044}
+
+  button.reset{background:var(--panel2);color:var(--muted);border:1px solid var(--line);
+    padding:7px 12px;border-radius:8px;font-size:12.5px;cursor:pointer}
+  button.reset:hover{color:var(--txt);border-color:var(--accent)}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .streak{font-size:13px;color:var(--muted)}
+  .streak b{color:var(--accent);font-size:18px}
+  footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:20px}
+  .checkpoint{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted);padding:5px 0;border-bottom:1px dashed var(--line)}
+  .checkpoint b{color:var(--txt)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+  .block{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--panel2)}
+  .block .bt{font-weight:700;font-size:14px;color:var(--blue)}
+  .block .bt small{color:var(--muted);font-weight:400}
+  .rule{background:#facc1512;border:1px solid #facc1533;border-radius:10px;padding:10px 14px;margin:8px 0;font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="sub">★ Operation: The Comeback ★</div>
+    <h1>The Fallen Angel Remembers</h1>
+    <p>You're not dumb and you're not behind for life — you're <b>untrained</b>, and that's the easiest thing in the world to fix. School gives you structure, PW gives you speed. This page gives you the plan that ties it together. One core (PCM) → CBSE 99%, JEE Main, IMU CET sub-100.</p>
+    <div class="quote">PW moving fast is a GIFT. The hard part (lectures + notes) is already done for you. Your only job: catch the wave — digest each class the same day, and backfill what they already covered.</div>
+    <div class="streak" style="margin-top:16px">Day-streak (tap when you don't have a zero-day): <b id="streakNum">0</b> 🔥 &nbsp; <button class="reset" id="streakBtn">+1 Day</button> <button class="reset" id="streakReset">reset</button></div>
+  </header>
+
+  <!-- OPERATING RULES -->
+  <div class="card" style="border-color:#facc1544">
+    <h2>📜 The 4 Rules (read before anything)</h2>
+    <div class="rule"><b>1. Never a zero-day.</b> Beast-mode when you can, but on dead days do the <b>Bad-Day Floor</b> (25 min). Missing one day is life; missing two builds the wrong habit.</div>
+    <div class="rule"><b>2. Same-day digestion.</b> Whatever PW/school teaches today, revise it + do its DPP the SAME night. This single rule stops new backlog from ever forming.</div>
+    <div class="rule"><b>3. Backlog runs in parallel.</b> Don't wait to "finish backlog first." Every day = a bit of current + a bit of backlog. Both tracks, always.</div>
+    <div class="rule"><b>4. Problems &gt; reading.</b> You learn PCM by solving, not by watching. Aim: 60% of study time should be your pen moving.</div>
+  </div>
+
+  <!-- DAILY ENGINE -->
+  <div class="card" style="border-color:#3fb95055">
+    <div class="row">
+      <h2>⚙️ The Daily Engine <span class="tag">your main routine — block-based, not clock-based</span></h2>
+      <button class="reset" data-reset="daily">↻ Reset for new day</button>
+    </div>
+    <p class="hint">Built for a school + PW-offline student. Do the blocks in any order that fits your day. On a packed day (school + PW class), Blocks 1 & 4 are the must-dos. On a free day, go big on Block 2.</p>
+    <div class="bar"><i data-bar="daily"></i></div><span class="pct" data-pct="daily"></span>
+
+    <div class="block">
+      <div class="bt">BLOCK 1 · Same-Day Digestion <small>~60–90 min · HIGHEST PRIORITY</small></div>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Revise today's <b>PW lecture(s)</b> from your notes the same night</span></label>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Solve the <b>DPP / module sheet</b> for today's topic completely</span></label>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Note any doubt → ask in next class / clear it tomorrow</span></label>
+    </div>
+    <div class="block">
+      <div class="bt">BLOCK 2 · Backlog Backfill <small>~45–90 min · go big on free days</small></div>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Pick <b>1 backlog topic</b> (PW-already-covered first) → relearn concept</span></label>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Solve <b>15–25 problems</b> on it (NCERT + module + PYQs)</span></label>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Tick it in the Syllabus Tracker once you can teach it</span></label>
+    </div>
+    <div class="block">
+      <div class="bt">BLOCK 3 · School + Boards <small>~30–45 min</small></div>
+      <label class="task"><input type="checkbox" data-g="daily"><span>Finish <b>school homework</b> (don't let it pile up)</span></label>
+      <label class="task"><input type="checkbox" data-g="daily"><span><b>NCERT line-reading</b> for Chemistry / theory (board + IMU gold)</span></label>
+    </div>
+    <div class="block">
+      <div class="bt">BLOCK 4 · Recall + Mix <small>~20–30 min · the cheat code</small></div>
+      <label class="task"><input type="checkbox" data-g="daily"><span>15 min: <b>recall yesterday's topics on blank paper</b> (no notes)</span></label>
+      <label class="task"><input type="checkbox" data-g="daily"><span>10 min IMU add-on: <b>10 vocab + 5 GK + 5 aptitude</b> Qs</span></label>
+    </div>
+  </div>
+
+  <!-- BAD DAY FLOOR -->
+  <div class="card">
+    <h2>🛟 The Bad-Day Floor <span class="tag">for sick / drowning / dead-tired days</span></h2>
+    <p class="hint">You don't skip — you shrink. This keeps the streak alive so the habit never dies.</p>
+    <label class="task"><input type="checkbox" data-g="floor"><span>25 min only: revise <b>today's class</b> + solve <b>5 questions</b>. Done. No guilt.</span></label>
+  </div>
+
+  <!-- WEEKLY -->
+  <div class="card">
+    <div class="row">
+      <h2>📅 Weekly Non-Negotiables <span class="tag">tick across the week</span></h2>
+      <button class="reset" data-reset="weekly">↻ Reset for new week</button>
+    </div>
+    <div class="bar"><i data-bar="weekly"></i></div><span class="pct" data-pct="weekly"></span>
+    <div class="grid cols-2" style="margin-top:12px">
+      <div>
+        <label class="task"><input type="checkbox" data-g="weekly"><span>1 full <b>timed test / PW test</b> + analyze EVERY mistake</span></label>
+        <label class="task"><input type="checkbox" data-g="weekly"><span>Update your <b>mistake notebook</b> (concept + silly errors)</span></label>
+        <label class="task"><input type="checkbox" data-g="weekly"><span>Close <b>3+ backlog topics</b> this week</span></label>
+      </div>
+      <div>
+        <label class="task"><input type="checkbox" data-g="weekly"><span>Re-solve last week's mistake-notebook questions from scratch</span></label>
+        <label class="task"><input type="checkbox" data-g="weekly"><span>1 NCERT deep-read session (Chemistry theory)</span></label>
+        <label class="task"><input type="checkbox" data-g="weekly"><span>1 protected light day — burnout is how angels fall again</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- PW CATCH-UP -->
+  <div class="card" style="border-color:#bc8cff55">
+    <h2>🌊 PW Catch-Up Priority <span class="tag">do this FIRST — fill the chapters PW already taught</span></h2>
+    <p class="hint">PW has already covered ~3 Physics, ~3 Chemistry, ~4–5 Maths chapters. These are your <b>#1 backlog</b> because the lectures + DPPs already exist AND tests will hit them. Type the exact chapter names PW did, then clear them one by one.</p>
+    <div class="bar"><i data-bar="pw"></i></div><span class="pct" data-pct="pw"></span>
+    <div class="grid cols-3" style="margin-top:12px">
+      <div class="mini">
+        <h3>⚛️ Physics (PW done)</h3>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Physics ch.1 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Physics ch.2 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Physics ch.3 — (rename)</span></label>
+      </div>
+      <div class="mini">
+        <h3>🧪 Chemistry (PW done)</h3>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Chem ch.1 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Chem ch.2 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Chem ch.3 — (rename)</span></label>
+      </div>
+      <div class="mini">
+        <h3>📐 Maths (PW done)</h3>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Maths ch.1 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Maths ch.2 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Maths ch.3 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Maths ch.4 — (rename)</span></label>
+        <label class="task"><input type="checkbox" data-g="pw"><span contenteditable="true">PW Maths ch.5 — (rename)</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL SYLLABUS: PHYSICS -->
+  <div class="card">
+    <h2>⚛️ Physics — Full Syllabus <span class="tag">JEE/NCERT · tick when chapter is solid</span></h2>
+    <p class="hint">Strategy: build Mechanics first (it carries everything), then Electrodynamics (biggest weightage), then Modern Physics (high marks, easy), then Optics/Waves/Heat.</p>
+    <div class="bar"><i data-bar="phy"></i></div><span class="pct" data-pct="phy"></span>
+    <div class="grid cols-2" style="margin-top:12px">
+      <div class="mini">
+        <h3>Class 11</h3>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Units, Dimensions & Errors</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Kinematics (1D + 2D / Projectile)</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Laws of Motion + Friction</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Work, Energy & Power</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Centre of Mass & Rotational Motion</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Gravitation</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Mechanical Properties of Solids & Fluids</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Thermal Properties & Calorimetry</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Thermodynamics + Kinetic Theory</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Oscillations (SHM)</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Waves & Sound</span></label>
+      </div>
+      <div class="mini">
+        <h3>Class 12</h3>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Electrostatics (Charges, Field, Potential, Capacitance)</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Current Electricity</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Moving Charges & Magnetism</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Magnetism & Matter</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Electromagnetic Induction</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Alternating Current</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Electromagnetic Waves</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Ray Optics & Instruments</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Wave Optics</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Dual Nature of Radiation & Matter</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Atoms & Nuclei</span></label>
+        <label class="task"><input type="checkbox" data-g="phy"><span>Semiconductor Electronics</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL SYLLABUS: CHEMISTRY -->
+  <div class="card">
+    <h2>🧪 Chemistry — Full Syllabus <span class="tag">JEE/NCERT</span></h2>
+    <p class="hint">Strategy: Physical = practice (formulas + numericals), Inorganic = NCERT memory (read NCERT line-by-line), Organic = mechanism logic (never mug, understand). Inorganic is your fastest scoring zone for boards + IMU.</p>
+    <div class="bar"><i data-bar="chem"></i></div><span class="pct" data-pct="chem"></span>
+    <div class="grid cols-3" style="margin-top:12px">
+      <div class="mini">
+        <h3>Physical</h3>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Mole Concept / Basic Concepts</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Atomic Structure</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Chemical & Ionic Equilibrium</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Thermodynamics & Thermochemistry</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Redox Reactions</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Solutions</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Electrochemistry</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Chemical Kinetics</span></label>
+      </div>
+      <div class="mini">
+        <h3>Inorganic</h3>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Periodic Table & Periodicity</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Chemical Bonding</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>p-Block Elements</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>d & f-Block Elements</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Coordination Compounds</span></label>
+      </div>
+      <div class="mini">
+        <h3>Organic</h3>
+        <label class="task"><input type="checkbox" data-g="chem"><span>GOC (Basic Principles)</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Hydrocarbons</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Haloalkanes & Haloarenes</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Alcohols, Phenols & Ethers</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Aldehydes, Ketones & Carboxylic Acids</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Amines</span></label>
+        <label class="task"><input type="checkbox" data-g="chem"><span>Biomolecules</span></label>
+      </div>
+    </div>
+    <p class="small" style="margin-top:8px">⚠️ A few chapters were trimmed in recent NCERT/JEE updates — cross-check the official JEE syllabus PDF and delete any that don't apply to your year.</p>
+  </div>
+
+  <!-- FULL SYLLABUS: MATHS -->
+  <div class="card">
+    <h2>📐 Maths — Full Syllabus <span class="tag">JEE/NCERT</span></h2>
+    <p class="hint">Strategy: Maths = pure reps. Calculus + Algebra carry the biggest JEE weightage. Do 30+ problems per topic minimum. Speed comes only from volume.</p>
+    <div class="bar"><i data-bar="math"></i></div><span class="pct" data-pct="math"></span>
+    <div class="grid cols-2" style="margin-top:12px">
+      <div class="mini">
+        <h3>Class 11</h3>
+        <label class="task"><input type="checkbox" data-g="math"><span>Sets, Relations & Functions</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Trigonometry</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Complex Numbers & Quadratic Equations</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Permutations & Combinations</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Binomial Theorem</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Sequences & Series</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Straight Lines</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Conic Sections (Circle/Parabola/Ellipse/Hyperbola)</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Limits & Derivatives</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Statistics & Basic Probability</span></label>
+      </div>
+      <div class="mini">
+        <h3>Class 12</h3>
+        <label class="task"><input type="checkbox" data-g="math"><span>Inverse Trigonometric Functions</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Matrices & Determinants</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Continuity & Differentiability</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Application of Derivatives</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Indefinite & Definite Integrals</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Area under Curves</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Differential Equations</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Vector Algebra</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>3D Geometry</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Probability (Bayes, Distributions)</span></label>
+        <label class="task"><input type="checkbox" data-g="math"><span>Linear Programming</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="card">
+    <h2>🗺️ The Roadmap <span class="tag">milestones, not a clock</span></h2>
+    <div class="phase" style="border-color:var(--accent)">
+      <div class="when">Now → Jul 15, 2026 · THE AUDIT</div>
+      <h3>Set up the comeback</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>Fill the PW Catch-Up + full backlog list. Start the Daily Engine TODAY.</span></label>
+      <label class="task"><input type="checkbox" data-g="road"><span>Clear the PW-already-covered chapters first (lectures already exist)</span></label>
+    </div>
+    <div class="phase">
+      <div class="when">Jul 16 → Aug 31 · BACKLOG BLITZ</div>
+      <h3>Catch the wave</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>Stay 100% current with PW + clear 3 backlog topics/week</span></label>
+      <label class="task"><input type="checkbox" data-g="road"><span>Start weekend full tests</span></label>
+    </div>
+    <div class="phase" style="border-color:var(--pink)">
+      <div class="when">Sep → Oct 31 · HALF-YEARLY 🎯</div>
+      <h3>First comeback proof + backlog = ZERO</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>Board-style answer writing + sample papers 3 weeks before exam</span></label>
+      <label class="task"><input type="checkbox" data-g="road"><span>Backlog hits ZERO by Oct 31</span></label>
+    </div>
+    <div class="phase">
+      <div class="when">Nov → Dec 31 · FULL SYLLABUS + MOCKS</div>
+      <h3>Finish everything + start JEE mocks</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>100% Class 12 syllabus done · 1 full JEE mock/week · Class 11 revision</span></label>
+    </div>
+    <div class="phase" style="border-color:var(--green)">
+      <div class="when">~Jan 2027 · JEE MAIN S1 🚀</div>
+      <h3>Bank a strong percentile</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>10 yrs PYQs + mock every alternate day</span></label>
+    </div>
+    <div class="phase" style="border-color:var(--pink)">
+      <div class="when">~Feb–Mar 2027 · CBSE BOARDS 🏆</div>
+      <h3>The 99%</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>Sample papers + answer presentation · don't neglect non-PCM</span></label>
+    </div>
+    <div class="phase" style="border-color:var(--green)">
+      <div class="when">~Apr 2027 · JEE MAIN S2 ⚡</div>
+      <h3>Push percentile higher (best of 2 counts)</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>Back-to-back mocks · fix S1 weak chapters · numerical speed</span></label>
+    </div>
+    <div class="phase" style="border-color:var(--purple)">
+      <div class="when">~May 2027 · IMU CET 🚢</div>
+      <h3>Sub-100 rank</h3>
+      <label class="task"><input type="checkbox" data-g="road"><span>PCM already strong → lock English + GK + Aptitude (75 marks = your edge)</span></label>
+      <label class="task"><input type="checkbox" data-g="road"><span>10+ full IMU mocks · smart skip strategy (−0.25 negative)</span></label>
+    </div>
+  </div>
+
+  <!-- CHECKPOINTS -->
+  <div class="card">
+    <h2>🏁 Key Checkpoints</h2>
+    <div class="checkpoint"><span class="dot"></span><div><b>Sep–Oct 2026</b> — School Half-Yearly (first comeback proof)</div></div>
+    <div class="checkpoint"><span class="dot"></span><div><b>Oct 31, 2026</b> — Backlog = ZERO</div></div>
+    <div class="checkpoint"><span class="dot"></span><div><b>Dec 31, 2026</b> — Full Class 12 syllabus done + mocks running</div></div>
+    <div class="checkpoint"><span class="dot"></span><div><b>~Jan 2027</b> — JEE Main Session 1</div></div>
+    <div class="checkpoint"><span class="dot"></span><div><b>~Feb–Mar 2027</b> — CBSE Boards (the 99%)</div></div>
+    <div class="checkpoint"><span class="dot"></span><div><b>~Apr 2027</b> — JEE Main Session 2</div></div>
+    <div class="checkpoint" style="border:none"><span class="dot"></span><div><b>~May 2027</b> — IMU CET (sub-100 rank)</div></div>
+    <p class="small" style="margin-top:10px">⚠️ Confirm exact 2027 dates on NTA (JEE) and imu.edu.in when released, and shift phases to match.</p>
+  </div>
+
+  <footer>
+    Built for the comeback. Progress saves automatically in this browser.<br>
+    Click any chapter text to rename it. Tick boxes as you win. — <i>The angel is remembering.</i>
+  </footer>
+</div>
+
+<script>
+  const KEY='comeback_v2';
+  const state=JSON.parse(localStorage.getItem(KEY)||'{}');
+  function save(){localStorage.setItem(KEY,JSON.stringify(state));}
+  document.querySelectorAll('input[type=checkbox][data-g]').forEach((box,i)=>{
+    const g=box.dataset.g; box.dataset.id=g+'_'+i;
+    if(state[box.dataset.id]) box.checked=true;
+    box.addEventListener('change',()=>{state[box.dataset.id]=box.checked;save();updateBars();});
+  });
+  document.querySelectorAll('span[contenteditable]').forEach((sp,i)=>{
+    const id='edit_'+i; sp.dataset.id=id;
+    if(state[id]!==undefined) sp.textContent=state[id];
+    sp.addEventListener('input',()=>{state[id]=sp.textContent;save();});
+  });
+  function updateBars(){
+    document.querySelectorAll('[data-bar]').forEach(bar=>{
+      const g=bar.dataset.bar;
+      const boxes=[...document.querySelectorAll('input[data-g="'+g+'"]')];
+      const done=boxes.filter(b=>b.checked).length;
+      const pct=boxes.length?Math.round(done/boxes.length*100):0;
+      bar.style.width=pct+'%';
+      const lbl=document.querySelector('[data-pct="'+g+'"]');
+      if(lbl) lbl.textContent=done+'/'+boxes.length+'  ('+pct+'%)';
+    });
+  }
+  document.querySelectorAll('button[data-reset]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const g=btn.dataset.reset;
+      document.querySelectorAll('input[data-g="'+g+'"]').forEach(b=>{b.checked=false;state[b.dataset.id]=false;});
+      save();updateBars();
+    });
+  });
+  const streakNum=document.getElementById('streakNum');
+  state.streak=state.streak||0; streakNum.textContent=state.streak;
+  document.getElementById('streakBtn').onclick=()=>{state.streak++;streakNum.textContent=state.streak;save();};
+  document.getElementById('streakReset').onclick=()=>{state.streak=0;streakNum.textContent=0;save();};
+  updateBars();
+</script>
+</body>
+</html>

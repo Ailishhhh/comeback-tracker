@@ -124,12 +124,16 @@
     <div class="cd-grid" id="cdGrid"></div>
   </div>
 
-  <!-- STREAK + RULES -->
+  <!-- COMMAND CENTER + RULES -->
   <div class="card" style="border-color:#ffb02044">
-    <div class="row">
-      <h2>🔥 Streak & War Rules</h2>
-      <div class="streak">No-zero-day streak: <b id="streakNum">0</b> 🔥 <button class="reset" id="streakBtn">+1 Day</button> <button class="reset" id="streakReset">reset</button></div>
+    <h2>🎖️ Command Center</h2>
+    <div class="cd-grid" style="margin:8px 0 12px">
+      <div class="cd"><div class="ico">📅</div><div class="nm">Days since you started</div><div class="days"><span id="dayCount">1</span> <small>day(s)</small></div></div>
+      <div class="cd"><div class="ico">🔥</div><div class="nm">Current streak — auto-breaks if you miss a day</div><div class="days"><span id="streakNum">0</span> <small>days</small></div></div>
+      <div class="cd"><div class="ico">🏅</div><div class="nm">Best streak ever</div><div class="days"><span id="bestStreak">0</span> <small>days</small></div></div>
     </div>
+    <div id="streakMsg" class="rule"></div>
+    <button class="reset" id="markBtn" style="background:#28e07b1a;border-color:#28e07b55;color:#28e07b;font-weight:700;padding:9px 16px;font-size:14px;margin:4px 0 10px">✅ Mark TODAY done</button>
     <div class="rule"><b>1. Never a zero-day.</b> Beast-mode when you can; dead days = the 25-min Floor. Missing twice in a row is how the comeback dies.</div>
     <div class="rule"><b>2. Same-day digestion.</b> Tonight you revise today's PW/school class + do its DPP. This one rule kills new backlog forever.</div>
     <div class="rule"><b>3. Backlog runs in parallel.</b> Every day = a bit of current + a bit of backlog. Never "finish backlog first."</div>
@@ -464,10 +468,38 @@
       save();updateBars();
     });
   });
-  const sN=document.getElementById('streakNum');
-  state.streak=state.streak||0; sN.textContent=state.streak;
-  document.getElementById('streakBtn').onclick=()=>{state.streak++;sN.textContent=state.streak;save();};
-  document.getElementById('streakReset').onclick=()=>{state.streak=0;sN.textContent=0;save();};
+  /* ===== day counter + auto-breaking streak ===== */
+  function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+  function dayGap(a,b){
+    const pa=a.split('-').map(Number), pb=b.split('-').map(Number);
+    return Math.round((new Date(pb[0],pb[1]-1,pb[2])-new Date(pa[0],pa[1]-1,pa[2]))/86400000);
+  }
+  if(!state.startDate){state.startDate=todayStr();save();}
+  state.streak=state.streak||0; state.best=state.best||0;
+  function refreshStats(){
+    const t=todayStr();
+    document.getElementById('dayCount').textContent=dayGap(state.startDate,t)+1;
+    if(state.lastDone && dayGap(state.lastDone,t)>=2) state.streak=0; // missed a day -> broken
+    document.getElementById('streakNum').textContent=state.streak;
+    document.getElementById('bestStreak').textContent=state.best;
+    const done=state.lastDone===t;
+    const msg=document.getElementById('streakMsg');
+    if(done) msg.innerHTML='✅ Today is LOCKED IN. Streak: <b>'+state.streak+'</b> day(s). Be back tomorrow.';
+    else if(state.streak>0) msg.innerHTML='⚠️ Your <b>'+state.streak+'-day</b> streak is alive — but TODAY isn\'t marked yet. Do the work, then lock it in or it breaks tomorrow.';
+    else msg.innerHTML='🔥 Streak at zero. Finish today\'s work and mark it done to start the chain.';
+    const btn=document.getElementById('markBtn');
+    btn.disabled=done; btn.textContent=done?'✅ Today already locked':'✅ Mark TODAY done';
+    save();
+  }
+  document.getElementById('markBtn').onclick=()=>{
+    const t=todayStr();
+    if(state.lastDone===t) return;
+    state.streak=(state.lastDone && dayGap(state.lastDone,t)===1)?state.streak+1:1;
+    state.lastDone=t;
+    if(state.streak>state.best) state.best=state.streak;
+    save(); refreshStats();
+  };
+  refreshStats();
   updateBars();
 </script>
 </body>

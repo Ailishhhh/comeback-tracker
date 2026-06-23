@@ -400,8 +400,9 @@
   function tick(){
     const now=new Date();
     let next=null, nextDiff=Infinity;
-    document.querySelectorAll('.cd').forEach(el=>{
+    document.querySelectorAll('#cdGrid .cd').forEach(el=>{
       const t=TARGETS[el.dataset.i];
+      if(!t) return;
       const diff=t.date-now;
       const dEl=el.querySelector('[data-days]');
       const trk=el.querySelector('[data-trk]');
